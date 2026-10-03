@@ -1,0 +1,77 @@
+services:
+  web:
+    build: .
+    env_file:
+      - .env
+    environment:
+      DJANGO_DEBUG: "0"
+      SQLITE_PATH: /data/db.sqlite3
+      SESSION_COOKIE_SECURE: "0"
+      CSRF_COOKIE_SECURE: "0"
+    volumes:
+      - sqlite_data:/data
+      - static_data:/app/staticfiles
+    expose:
+      - "8000"
+    restart: unless-stopped
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "python",
+          "-c",
+          "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/login/')",
+        ]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+      start_period: 40s
+
+  nginx:
+    image: nginx:1.27-alpine
+    depends_on:
+      web:
+        condition: service_healthy
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./docker/nginx/http.conf:/etc/nginx/site-templates/http.conf:ro
+      - ./docker/nginx/ssl.conf:/etc/nginx/site-templates/ssl.conf:ro
+      - ./docker/nginx/entrypoint.sh:/entrypoint.sh:ro
+      - static_data:/var/www/static:ro
+      - letsencrypt:/etc/letsencrypt
+      - certbot_www:/var/www/certbot
+    entrypoint: ["/bin/sh", "/entrypoint.sh"]
+    restart: unless-stopped
+
+  certbot:
+    image: certbot/certbot:latest
+    depends_on:
+      - nginx
+    volumes:
+      - letsencrypt:/etc/letsencrypt
+      - certbot_www:/var/www/certbot
+    entrypoint: /bin/sh
+    command:
+      - -c
+      - |
+        sleep 8
+        if [ ! -f /etc/letsencrypt/live/ocher.hikmatullo.site/fullchain.pem ]; then
+          certbot certonly --webroot -w /var/www/certbot \
+            -d ocher.hikmatullo.site \
+            --email abdunazarovhikmatullo2@gmail.com \
+            --agree-tos --no-eff-email --non-interactive || true
+        fi
+        trap 'exit 0' TERM INT
+        while true; do
+          certbot renew --webroot -w /var/www/certbot --quiet || true
+          sleep 12h & wait $$!
+        done
+    restart: unless-stopped
+
+volumes:
+  sqlite_data:
+  static_data:
+  letsencrypt:
+  certbot_www:

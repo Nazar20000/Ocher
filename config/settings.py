@@ -77,10 +77,13 @@ TEMPLATES = [
 WSGI_APPLICATION = "config.wsgi.application"
 ASGI_APPLICATION = "config.asgi.application"
 
+_sqlite_path = Path(os.environ.get("SQLITE_PATH", BASE_DIR / "db.sqlite3"))
+_sqlite_path.parent.mkdir(parents=True, exist_ok=True)
+
 DATABASES = {
     "default": {
         "ENGINE": "django.db.backends.sqlite3",
-        "NAME": BASE_DIR / "db.sqlite3",
+        "NAME": _sqlite_path,
         "OPTIONS": {"timeout": 20},
     }
 }
@@ -108,8 +111,8 @@ SESSION_COOKIE_SAMESITE = "Lax"
 
 if not DEBUG:
     SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
-    SESSION_COOKIE_SECURE = True
-    CSRF_COOKIE_SECURE = True
+    SESSION_COOKIE_SECURE = os.environ.get("SESSION_COOKIE_SECURE", "1") == "1"
+    CSRF_COOKIE_SECURE = os.environ.get("CSRF_COOKIE_SECURE", "1") == "1"
 
 SITE_URL = os.environ.get("SITE_URL", "https://ocher.hikmatullo.site").rstrip("/")
 
