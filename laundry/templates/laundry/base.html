@@ -1,0 +1,56 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{% block title %}Очередь{% endblock %} · Стиралки</title>
+  <link rel="icon" href="{% static 'laundry/favicon.svg' %}" type="image/svg+xml">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="{% static 'laundry/app.css' %}?v=3">
+</head>
+<body>
+  {% if resident %}
+  <header class="header">
+    <div class="bar">
+      <a class="brand" href="{% url 'home' %}">
+        <span class="mark" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <rect x="4" y="3" width="16" height="18" rx="2"></rect>
+            <circle cx="12" cy="13" r="4"></circle>
+            <path d="M8 6h.01"></path>
+          </svg>
+        </span>
+        <span class="brand-name">Очередь</span>
+      </a>
+      <div class="header-user">
+        <div class="user-meta">
+          <span class="user-name">{{ resident.name }}</span>
+          <span class="user-apt">кв. {{ resident.apartment }}</span>
+        </div>
+        <a class="btn btn-outline btn-sm" href="{% url 'profile' %}">Уведомления</a>
+        <form method="post" action="{% url 'logout' %}">
+          {% csrf_token %}
+          <button class="btn btn-outline btn-sm" type="submit">Выйти</button>
+        </form>
+      </div>
+    </div>
+  </header>
+  {% endif %}
+
+  <main class="main {% block main_class %}{% endblock %}">
+    <div class="bar">
+      {% if messages %}
+      <div class="alerts">
+        {% for message in messages %}
+        <div class="alert alert-{{ message.tags }}" role="status">{{ message }}</div>
+        {% endfor %}
+      </div>
+      {% endif %}
+      {% block content %}{% endblock %}
+    </div>
+  </main>
+</body>
+</html>

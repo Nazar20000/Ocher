@@ -1,0 +1,104 @@
+{% extends "laundry/base.html" %}
+
+{% block title %}{{ machine.title }}{% endblock %}
+{% block main_class %}main-narrow{% endblock %}
+
+{% block content %}
+<a class="back" href="{% url 'home' %}">
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+    <path d="m15 18-6-6 6-6"></path>
+  </svg>
+  Все стиралки
+</a>
+
+<div class="page-head">
+  <p class="kicker">Машина 0{{ machine.number }}</p>
+  <h1>{{ machine.title }}</h1>
+  <p>
+    {% if machine.current %}
+    Сейчас стирает {{ machine.current.resident.name }}, кв. {{ machine.current.resident.apartment }}.
+    {% else %}
+    Сейчас свободно.
+    {% endif %}
+  </p>
+</div>
+
+{% if machine.your_entry and machine.your_entry.status == "active" %}
+<section class="callout callout-now">
+  <div>
+    <h2>Сейчас ваша очередь</h2>
+    <p>Когда заберёте бельё, завершите стирку. Если передумали — отмените очередь, и ход перейдёт следующему.</p>
+  </div>
+  <div class="callout-actions">
+    <form method="post" action="{% url 'complete' machine.your_entry.id %}">
+      {% csrf_token %}
+      <button class="btn btn-primary" type="submit">Я забрал бельё</button>
+    </form>
+    <form method="post" action="{% url 'leave' machine.your_entry.id %}">
+      {% csrf_token %}
+      <button class="btn btn-outline" type="submit">Отменить очередь</button>
+    </form>
+  </div>
+</section>
+{% elif machine.your_entry %}
+<section class="callout">
+  <div>
+    <h2>Вы №{{ machine.your_position }} в очереди</h2>
+    <p>Перед вами {{ machine.your_position|add:"-1" }}. Свою очередь можно отменить в любой момент.</p>
+  </div>
+  <form method="post" action="{% url 'leave' machine.your_entry.id %}">
+    {% csrf_token %}
+    <button class="btn btn-outline" type="submit">Отменить очередь</button>
+  </form>
+</section>
+{% elif your_open %}
+<section class="callout">
+  <div>
+    <h2>Вы уже в другой очереди</h2>
+    <p>Сначала закончите очередь к «{{ your_open.machine.title }}».</p>
+  </div>
+  <a class="btn btn-outline" href="{% url 'machine' your_open.machine.number %}">Перейти</a>
+</section>
+{% else %}
+<section class="callout">
+  <div>
+    <h2>Встаньте в очередь</h2>
+    <p>Если стиралка свободна, ход сразу ваш. Иначе вы будете в конце списка.</p>
+  </div>
+  <form method="post" action="{% url 'join' machine.number %}">
+    {% csrf_token %}
+    <button class="btn btn-primary" type="submit">Встать в очередь</button>
+  </form>
+</section>
+{% endif %}
+
+<section class="card queue-card">
+  <div class="card-head">
+    <h2>Очередь</h2>
+    <span class="count">{{ machine.queue|length }}</span>
+  </div>
+  <ol class="queue">
+    {% for entry in machine.queue %}
+    <li class="queue-item{% if entry.resident_id == resident.id %} is-you{% endif %}{% if entry.status == 'active' %} is-current{% endif %}">
+      <span class="pos">{{ forloop.counter }}</span>
+      <div class="who">
+        <div class="who-line">
+          <span class="who-name">{{ entry.resident.name }}</span>
+          {% if entry.status == "active" %}
+          <span class="badge">Сейчас</span>
+          {% else %}
+          <span class="badge badge-muted">Ожидает</span>
+          {% endif %}
+          {% if entry.resident_id == resident.id %}
+          <span class="badge badge-outline">Вы</span>
+          {% endif %}
+        </div>
+        <p class="who-meta">кв. {{ entry.resident.apartment }}</p>
+      </div>
+    </li>
+    {% empty %}
+    <li class="empty">Пока никого нет. Займите очередь — и можно стирать.</li>
+    {% endfor %}
+  </ol>
+</section>
+{% endblock %}

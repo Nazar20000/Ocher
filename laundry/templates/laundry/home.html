@@ -1,0 +1,55 @@
+{% extends "laundry/base.html" %}
+
+{% block title %}Стиральные машины{% endblock %}
+
+{% block content %}
+<div class="page-head">
+  <h1>Стиральные машины</h1>
+  <p>Выберите стиралку, посмотрите очередь и займите место.</p>
+</div>
+
+<div class="cards">
+  {% for machine in machines %}
+  <a class="card card-link{% if machine.your_entry and machine.your_entry.status == 'active' %} card-yours{% endif %}" href="{% url 'machine' machine.number %}">
+    <div class="card-top">
+      <div>
+        <p class="kicker">Машина 0{{ machine.number }}</p>
+        <h2>{{ machine.title }}</h2>
+      </div>
+      {% if machine.your_entry and machine.your_entry.status == "active" %}
+      <span class="badge">Ваша очередь</span>
+      {% elif machine.your_entry %}
+      <span class="badge badge-muted">Вы №{{ machine.your_position }}</span>
+      {% elif machine.current %}
+      <span class="badge badge-muted">Занята</span>
+      {% else %}
+      <span class="badge badge-ok">Свободна</span>
+      {% endif %}
+    </div>
+    <dl class="stats">
+      <div>
+        <dt>Сейчас</dt>
+        <dd>
+          {% if machine.current %}
+          {{ machine.current.resident.name }}, кв. {{ machine.current.resident.apartment }}
+          {% else %}
+          Никого
+          {% endif %}
+        </dd>
+      </div>
+      <div>
+        <dt>В очереди</dt>
+        <dd>{{ machine.queue|length }}</dd>
+      </div>
+    </dl>
+    <div class="card-action">
+      Смотреть очередь
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <path d="M5 12h14"></path>
+        <path d="m12 5 7 7-7 7"></path>
+      </svg>
+    </div>
+  </a>
+  {% endfor %}
+</div>
+{% endblock %}

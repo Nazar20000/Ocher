@@ -1,0 +1,45 @@
+{% extends "laundry/base.html" %}
+
+{% block title %}Регистрация{% endblock %}
+{% block main_class %}main-auth{% endblock %}
+
+{% block content %}
+<div class="auth-brand">
+  <span class="mark" aria-hidden="true">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <rect x="4" y="3" width="16" height="18" rx="2"></rect>
+      <circle cx="12" cy="13" r="4"></circle>
+      <path d="M8 6h.01"></path>
+    </svg>
+  </span>
+  <span class="brand-name">Очередь</span>
+</div>
+
+<section class="card auth-card">
+  <header class="card-intro">
+    <h1>Регистрация</h1>
+    <p>Имя, квартира и телефон. Пароль не нужен — вход тоже по телефону.</p>
+  </header>
+  <form method="post" class="form" novalidate>
+    {% csrf_token %}
+    <div class="field">
+      <label class="label" for="id_name">Имя</label>
+      <input class="input{% if form.name.errors %} input-invalid{% endif %}" id="id_name" name="name" type="text" autocomplete="name" maxlength="80" placeholder="Алишер" value="{{ form.name.value|default_if_none:'' }}" required autofocus>
+      {% if form.name.errors %}<p class="field-error">{{ form.name.errors.0 }}</p>{% endif %}
+    </div>
+    <div class="field">
+      <label class="label" for="id_apartment">Номер квартиры</label>
+      <input class="input{% if form.apartment.errors %} input-invalid{% endif %}" id="id_apartment" name="apartment" type="text" autocomplete="off" maxlength="20" placeholder="214" value="{{ form.apartment.value|default_if_none:'' }}" required>
+      {% if form.apartment.errors %}<p class="field-error">{{ form.apartment.errors.0 }}</p>{% endif %}
+    </div>
+    <div class="field">
+      <label class="label" for="id_phone">Телефон</label>
+      <input class="input{% if form.phone.errors %} input-invalid{% endif %}" id="id_phone" name="phone" type="tel" inputmode="tel" autocomplete="tel" placeholder="+992 90 123 45 67" value="{{ form.phone.value|default_if_none:'' }}" required>
+      <p class="hint">По этому номеру вы войдёте в следующий раз.</p>
+      {% if form.phone.errors %}<p class="field-error">{{ form.phone.errors.0 }}</p>{% endif %}
+    </div>
+    <button class="btn btn-primary btn-block" type="submit">Зарегистрироваться</button>
+  </form>
+  <p class="auth-switch">Уже есть аккаунт? <a class="link" href="{% url 'login' %}">Войти</a></p>
+</section>
+{% endblock %}
